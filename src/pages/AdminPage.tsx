@@ -156,7 +156,7 @@ export const AdminPage: React.FC = () => {
   setLoginLoading(true);
 
   try {
-    const res = await fetch('https://goodfolk-solution-v2.onrender.com/api/auth/login', {
+    const res = await fetch('https://goodfolk-solution-v2.onrender.com/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
