@@ -6,13 +6,13 @@ import { db, hashPassword, verifyPassword } from './src/server/db';
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-// CORS: allow the deployed GitHub Pages frontend and local development.
+// CORS for the deployed GitHub Pages frontend and local development.
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
     'https://aksh3238.github.io',
     'http://localhost:5173',
-    'http://localhost:3000',
+    'http://localhost:3000'
   ];
 
   if (origin && allowedOrigins.includes(origin)) {
@@ -22,7 +22,9 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
   next();
 });
 
@@ -92,5 +94,3 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 
 // 1. Submit Enquiry (Homepage & Contact forms)
 app.post('/api/enquiries', (req, res) => {
-  try {
-    const { name, email, company, phone, service, budget, deadline, details, consent } = req.body;
