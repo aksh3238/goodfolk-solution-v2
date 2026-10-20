@@ -1037,9 +1037,8 @@ app.patch('/api/payments/:id', (req, res) => {
 // Admin authentication
 app.post('/api/admin/login', async (req, res) => {
   try {
-    const body = getRequestData(req);
-    const email = normalizeEmail(body.email);
-    const password = String(body.password || '');
+    const email = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
 
     if (!email || !password) {
       return res.status(400).json({
@@ -1048,47 +1047,32 @@ app.post('/api/admin/login', async (req, res) => {
       });
     }
 
-    const data = readData();
+    const owner = db.getOwner();
 
-    const user = data.users.find(
-      (item: any) => normalizeEmail(item.email) === email
-    );
-
-    if (!user) {
+    if (
+      email !== normalizeEmail(owner.email) ||
+      !verifyPassword(password, owner.passwordHash, owner.salt)
+    ) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.'
       });
     }
 
-    let validPassword = false;
-
-    try {
-      validPassword = await verifyPassword(password, user.password);
-    } catch (error) {
-      console.error('Password verification error:', error);
-    }
-
-    if (!validPassword) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password.'
-      });
-    }
+    const token = db.createSession(owner.id);
 
     return res.json({
       success: true,
-      message: 'Login successful.',
+      token,
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role || 'admin'
+        id: owner.id,
+        name: owner.name,
+        email: owner.email,
+        role: 'owner'
       }
     });
   } catch (error) {
     console.error('Admin login error:', error);
-
     return res.status(500).json({
       success: false,
       message: 'Unable to log in.'
