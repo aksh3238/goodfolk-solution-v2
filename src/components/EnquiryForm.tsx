@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import type { ServiceCategory } from '../types';
@@ -84,13 +85,16 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/enquiries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await fetch(
+        'https://goodfolk-backend.onrender.com/api/enquiries',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        }
+      );
 
       const data = await response.json();
 
@@ -100,7 +104,10 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
 
       setSubmittedId(data.enquiryId);
     } catch (err: any) {
-      setServerError(err.message || 'Network error occurred. Please try again or reach out directly via WhatsApp.');
+      setServerError(
+        err.message ||
+          'Network error occurred. Please try again or reach out directly via WhatsApp.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -112,13 +119,21 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         <div className="w-16 h-16 rounded-full bg-[#EEF2F9] text-[#173B75] flex items-center justify-center mx-auto mb-5">
           <CheckCircle2 className="w-9 h-9 text-[#F07822]" />
         </div>
-        <h3 className="text-2xl font-bold text-[#173B75]">Enquiry Received</h3>
+
+        <h3 className="text-2xl font-bold text-[#173B75]">
+          Enquiry Received
+        </h3>
+
         <p className="text-sm font-mono text-[#F07822] mt-1 font-semibold">
           Reference ID: {submittedId}
         </p>
+
         <p className="text-sm text-[#242832]/80 mt-3 max-w-md mx-auto leading-relaxed">
-          Thank you for reaching out to Goodfolk Solution. Our creative strategy team has recorded your brief and will review your project requirements. We typically respond within 24 business hours.
+          Thank you for reaching out to Goodfolk Solution. Our creative strategy
+          team has recorded your brief and will review your project requirements.
+          We typically respond within 24 business hours.
         </p>
+
         <div className="mt-6 pt-6 border-t border-[#E6E8ED] flex flex-wrap items-center justify-center gap-4">
           <button
             onClick={() => {
@@ -139,7 +154,9 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
           >
             Submit Another Project Brief
           </button>
+
           <span className="text-slate-300">·</span>
+
           <a
             href={`https://wa.me/919817961412?text=Hi%20Goodfolk%20Solution%2C%20I%20just%20submitted%20enquiry%20${submittedId}`}
             target="_blank"
@@ -167,7 +184,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Name */}
         <div>
           <label htmlFor="enquiry-name" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
             Your Name <span className="text-[#F07822]">*</span>
@@ -186,7 +202,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
           {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
         </div>
 
-        {/* Business Email */}
         <div>
           <label htmlFor="enquiry-email" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
             Business Email <span className="text-[#F07822]">*</span>
@@ -207,7 +222,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Company / Brand */}
         <div>
           <label htmlFor="enquiry-company" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
             Company / Brand Name
@@ -222,7 +236,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
           />
         </div>
 
-        {/* Mobile Number (REQUIRED) */}
         <div>
           <label htmlFor="enquiry-phone" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
             Mobile Number <span className="text-[#F07822]">*</span>
@@ -242,7 +255,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         </div>
       </div>
 
-      {/* Service Required Dropdown */}
       <div>
         <label htmlFor="enquiry-service" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
           Service Required <span className="text-[#F07822]">*</span>
@@ -254,14 +266,11 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
           className="w-full px-4 py-3 rounded-xl border border-[#E6E8ED] text-sm text-[#242832] bg-[#F7F7F5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#173B75]/20 focus:border-[#173B75] transition-all"
         >
           {servicesList.map((svc, idx) => (
-            <option key={idx} value={svc}>
-              {svc}
-            </option>
+            <option key={idx} value={svc}>{svc}</option>
           ))}
         </select>
       </div>
 
-      {/* Optional Contact Page Specific Fields */}
       {isFullContactPage && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
@@ -294,7 +303,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         </div>
       )}
 
-      {/* Project Details */}
       <div>
         <label htmlFor="enquiry-details" className="block text-xs font-bold uppercase tracking-wider text-[#173B75] mb-1.5">
           Project Details & Goals <span className="text-[#F07822]">*</span>
@@ -313,7 +321,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         {errors.details && <p className="text-xs text-red-600 mt-1">{errors.details}</p>}
       </div>
 
-      {/* Privacy Consent (for Contact Page) */}
       {isFullContactPage && (
         <div>
           <label className="flex items-start gap-3 cursor-pointer select-none">
@@ -339,7 +346,6 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         </div>
       )}
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={isSubmitting}
