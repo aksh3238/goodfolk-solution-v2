@@ -84,7 +84,7 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const fetchContent = async () => {
     try {
-      const res = await fetch('/api/site-content');
+      const res = await fetch('https://goodfolk-solution-v2.onrender.com/api/site-content');
       if (res.ok) {
         const data = await res.json();
         if (data.siteContent) setSiteContent(data.siteContent);
