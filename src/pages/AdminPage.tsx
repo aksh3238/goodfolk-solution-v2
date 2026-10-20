@@ -151,31 +151,43 @@ export const AdminPage: React.FC = () => {
   }, [token]);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError(null);
-    setLoginLoading(true);
+  e.preventDefault();
+  setLoginError(null);
+  setLoginLoading(true);
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword })
-      });
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: loginEmail.trim().toLowerCase(),
+        password: loginPassword
+      })
+    });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Invalid owner credentials.');
-      }
+    const data = await res.json().catch(() => ({}));
 
-      localStorage.setItem('gf_admin_token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-    } catch (err: any) {
-      setLoginError(err.message || 'Authentication error.');
-    } finally {
-      setLoginLoading(false);
+    if (!res.ok) {
+      throw new Error(
+        data.error || `Login failed (${res.status}). Check server configuration.`
+      );
     }
-  };
+
+    if (!data.token || !data.user) {
+      throw new Error('Invalid server response. Check the backend.');
+    }
+
+    localStorage.setItem('gf_admin_token', data.token);
+    setToken(data.token);
+    setUser(data.user);
+  } catch (err: unknown) {
+    setLoginError(
+      err instanceof Error ? err.message : 'Unable to connect to the server.'
+    );
+  } finally {
+    setLoginLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     if (token) {
