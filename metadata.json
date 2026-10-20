@@ -1,0 +1,6 @@
+{
+  "name": "Goodfolk Solution — Creative Agency & Admin Console",
+  "description": "Goodfolk Solution is a premier creative advertising, branding, design, and digital marketing agency based in India, serving ambitious brands worldwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

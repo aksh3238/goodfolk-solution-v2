@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #173B75;
+  --color-navy-hover: #123163;
+  --color-bright-blue: #2458A6;
+  --color-bright-blue-hover: #1d4684;
+  --color-orange: #F07822;
+  --color-orange-hover: #d66515;
+  --color-soft-cream: #FFF9F1;
+  --color-charcoal: #252A34;
+  --color-charcoal-light: #3d4350;
+  --color-border-brand: #E4D8C8;
+  --color-blue-tint: #E8EFF8;
+
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+}
+
+/* Universal High-Visibility Text Selection */
+::selection {
+  background-color: #F07822 !important;
+  color: #FFFFFF !important;
+  text-shadow: none !important;
+}
+
+::-moz-selection {
+  background-color: #F07822 !important;
+  color: #FFFFFF !important;
+  text-shadow: none !important;
+}
+
+/* Contrast text selection on dark navy elements */
+.bg-\[\#173B75\] *::selection,
+.bg-navy *::selection,
+footer *::selection,
+.glass-panel-navy *::selection {
+  background-color: #F07822 !important;
+  color: #FFFFFF !important;
+}
+
+/* Contrast text selection inside orange elements */
+.bg-\[\#F07822\] *::selection,
+.bg-orange *::selection {
+  background-color: #173B75 !important;
+  color: #FFFFFF !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Poppins', sans-serif;
+  background-color: #FFF9F1;
+  color: #252A34;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #FFF9F1;
+  color: #252A34;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(255, 249, 241, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 216, 200, 0.85);
+}
+
+.glass-panel-navy {
+  background: rgba(23, 59, 117, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.glass-panel-subtle {
+  background: rgba(232, 239, 248, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(228, 216, 200, 0.9);
+}
+
+/* Seamless Continuous Marquee Animation */
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-left 25s linear infinite;
+}
+
+.animate-marquee-right-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-right 30s linear infinite;
+}
+
+.marquee-pause:hover .animate-marquee-infinite,
+.marquee-pause:hover .animate-marquee-right-infinite {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-infinite,
+  .animate-marquee-right-infinite {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Ambient Glow Animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 10px rgba(240, 120, 34, 0.5));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 24px rgba(240, 120, 34, 0.9)) drop-shadow(0 0 40px rgba(23, 59, 117, 0.7));
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* Print utilities for Invoices and Receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printable-document, .printable-document * {
+    visibility: visible;
+  }
+  .printable-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

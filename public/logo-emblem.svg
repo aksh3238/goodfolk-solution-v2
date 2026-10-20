@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Goodfolk Solution Emblem -->
+  <!-- 4 Navy Heads -->
+  <circle cx="60" cy="20" r="10" fill="#123578" />
+  <circle cx="100" cy="60" r="10" fill="#123578" />
+  <circle cx="60" cy="100" r="10" fill="#123578" />
+  <circle cx="20" cy="60" r="10" fill="#123578" />
+
+  <!-- 4 Orange Bodies connecting together in harmony -->
+  <!-- Top-Right Body -->
+  <path d="M 69 24 C 77 24 88 29 93 39 C 96 46 95 53 91 58 C 84 52 79 46 75 39 C 71 33 69 28 69 24 Z" fill="#ED650B" />
+  <!-- Bottom-Right Body -->
+  <path d="M 96 69 C 96 77 91 88 81 93 C 74 96 67 95 62 91 C 68 84 74 79 81 75 C 87 71 92 69 96 69 Z" fill="#ED650B" />
+  <!-- Bottom-Left Body -->
+  <path d="M 51 96 C 43 96 32 91 27 81 C 24 74 25 67 29 62 C 36 68 41 74 45 81 C 49 87 51 92 51 96 Z" fill="#ED650B" />
+  <!-- Top-Left Body -->
+  <path d="M 24 51 C 24 43 29 32 39 27 C 46 24 53 25 58 29 C 52 36 46 41 39 45 C 33 49 28 51 24 51 Z" fill="#ED650B" />
+  
+  <!-- Central inner accents -->
+  <path d="M 48 37 C 54 34 66 34 72 37 C 69 43 65 47 60 48 C 55 47 51 43 48 37 Z" fill="#ED650B" opacity="0.95" />
+  <path d="M 83 48 C 86 54 86 66 83 72 C 77 69 73 65 72 60 C 73 55 77 51 83 48 Z" fill="#ED650B" opacity="0.95" />
+  <path d="M 72 83 C 66 86 54 86 48 83 C 51 77 55 73 60 72 C 65 73 69 77 72 83 Z" fill="#ED650B" opacity="0.95" />
+  <path d="M 37 72 C 34 66 34 54 37 48 C 43 51 47 55 48 60 C 47 65 43 69 37 72 Z" fill="#ED650B" opacity="0.95" />
+</svg>
