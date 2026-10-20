@@ -6,7 +6,6 @@ import { db, hashPassword, verifyPassword } from './src/server/db';
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-// CORS for GitHub Pages frontend and local development.
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
@@ -72,10 +71,7 @@ function readData(): WebsiteData {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     const parsed = JSON.parse(raw);
 
-    return {
-      ...defaultData,
-      ...parsed
-    };
+    return { ...defaultData, ...parsed };
   } catch (error) {
     console.error('Error reading data:', error);
     return defaultData;
@@ -141,77 +137,128 @@ app.get('/api', (_req, res) => {
   });
 });
 
-// Website enquiry form
-app.post('/api/enquiries', (req, res) => {
+// Website enquiries: save directly to Google Sheets.
+app.post('/api/enquiries', async (req, res) => {
   try {
     const body = getRequestData(req);
+
     const name = String(body.name || body.fullName || '').trim();
     const email = normalizeEmail(body.email);
-    const phone = String(body.phone || body.mobile || '').trim();
+    const company = String(
+      body.company || body.companyName || body.brand || ''
+    ).trim();
+    const mobile = String(body.mobile || body.phone || '').trim();
     const service = String(body.service || body.subject || '').trim();
-    const message = String(body.message || body.description || '').trim();
+    const budget = String(body.budget || '').trim();
+    const deadline = String(body.deadline || '').trim();
+    const details = String(
+      body.details || body.message || body.description || ''
+    ).trim();
 
-    if (!name || !email || !message) {
+    if (!name || !email || !details) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email and message are required.'
+        error: 'Name, email and project details are required.'
       });
     }
 
     if (!isValidEmail(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid email address.'
+        error: 'Please provide a valid email address.'
       });
     }
 
-    const data = readData();
+    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
 
-    const enquiry = {
-      id: generateId(),
-      name,
-      email,
-      phone,
-      service,
-      message,
-      status: 'new',
-      createdAt: new Date().toISOString()
-    };
+    if (!scriptUrl) {
+      console.error('GOOGLE_SCRIPT_URL environment variable is missing.');
 
-    data.enquiries.unshift(enquiry);
-    writeData(data);
+      return res.status(500).json({
+        success: false,
+        error: 'Enquiry service is not configured. Please try again later.'
+      });
+    }
+
+    const enquiryId = `GF-${Date.now()}`;
+    const createdAt = new Date().toISOString();
+
+    const sheetResponse = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({
+        id: enquiryId,
+        createdAt,
+        name,
+        company,
+        email,
+        mobile,
+        service,
+        budget,
+        deadline,
+        details
+      }),
+      redirect: 'follow'
+    });
+
+    const responseText = await sheetResponse.text();
+
+    let sheetResult: any;
+
+    try {
+      sheetResult = JSON.parse(responseText);
+    } catch {
+      console.error(
+        'Google Apps Script returned a non-JSON response:',
+        responseText.slice(0, 500)
+      );
+
+      return res.status(502).json({
+        success: false,
+        error: 'Google Sheets did not return a valid response. Check Apps Script deployment access.'
+      });
+    }
+
+    if (!sheetResponse.ok || sheetResult.success !== true) {
+      console.error(
+        'Google Sheets save failed:',
+        sheetResult.error || sheetResponse.statusText
+      );
+
+      return res.status(502).json({
+        success: false,
+        error: 'Could not save the enquiry to Google Sheets. Please try again.'
+      });
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Your enquiry has been submitted successfully.',
+      enquiryId,
       enquiry: {
-        id: enquiry.id,
-        status: enquiry.status
+        id: enquiryId,
+        status: 'new'
       }
     });
   } catch (error) {
     console.error('Enquiry submission error:', error);
+
     return res.status(500).json({
       success: false,
-      message: 'Unable to submit your enquiry right now.'
+      error: 'Unable to submit your enquiry right now.'
     });
   }
 });
 
 app.get('/api/enquiries', (_req, res) => {
-  try {
-    const data = readData();
-    res.json({
-      success: true,
-      enquiries: data.enquiries
-    });
-  } catch (error) {
-    console.error('Error fetching enquiries:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Unable to fetch enquiries.'
-    });
-  }
+  const data = readData();
+
+  res.json({
+    success: true,
+    enquiries: data.enquiries
+  });
 });
 
 app.patch('/api/enquiries/:id', (req, res) => {
@@ -243,6 +290,7 @@ app.patch('/api/enquiries/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating enquiry:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update enquiry.'
@@ -274,6 +322,7 @@ app.delete('/api/enquiries/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting enquiry:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete enquiry.'
@@ -327,6 +376,7 @@ app.post('/api/contacts', (req, res) => {
     });
   } catch (error) {
     console.error('Contact submission error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to submit your message.'
@@ -336,6 +386,7 @@ app.post('/api/contacts', (req, res) => {
 
 app.get('/api/contacts', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     contacts: data.contacts
@@ -371,6 +422,7 @@ app.patch('/api/contacts/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating contact:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update contact.'
@@ -378,9 +430,42 @@ app.patch('/api/contacts/:id', (req, res) => {
   }
 });
 
-// Portfolio projects
+app.delete('/api/contacts/:id', (req, res) => {
+  try {
+    const data = readData();
+    const length = data.contacts.length;
+
+    data.contacts = data.contacts.filter(
+      (item: any) => String(item.id) !== req.params.id
+    );
+
+    if (data.contacts.length === length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contact message not found.'
+      });
+    }
+
+    writeData(data);
+
+    return res.json({
+      success: true,
+      message: 'Contact message deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Error deleting contact:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to delete contact.'
+    });
+  }
+});
+
+// Projects
 app.get('/api/projects', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     projects: data.projects
@@ -415,6 +500,7 @@ app.post('/api/projects', (req, res) => {
     });
   } catch (error) {
     console.error('Error creating project:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create project.'
@@ -422,7 +508,7 @@ app.post('/api/projects', (req, res) => {
   }
 });
 
-app.put('/api/projects/:id', (req, res) => {
+app.patch('/api/projects/:id', (req, res) => {
   try {
     const data = readData();
     const index = data.projects.findIndex(
@@ -451,6 +537,7 @@ app.put('/api/projects/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating project:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update project.'
@@ -482,6 +569,7 @@ app.delete('/api/projects/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting project:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete project.'
@@ -492,6 +580,7 @@ app.delete('/api/projects/:id', (req, res) => {
 // Testimonials
 app.get('/api/testimonials', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     testimonials: data.testimonials
@@ -502,10 +591,10 @@ app.post('/api/testimonials', (req, res) => {
   try {
     const body = getRequestData(req);
 
-    if (!body.name || !body.message) {
+    if (!body.name || !body.content) {
       return res.status(400).json({
         success: false,
-        message: 'Name and testimonial message are required.'
+        message: 'Name and testimonial content are required.'
       });
     }
 
@@ -526,6 +615,7 @@ app.post('/api/testimonials', (req, res) => {
     });
   } catch (error) {
     console.error('Error creating testimonial:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create testimonial.'
@@ -533,7 +623,7 @@ app.post('/api/testimonials', (req, res) => {
   }
 });
 
-app.put('/api/testimonials/:id', (req, res) => {
+app.patch('/api/testimonials/:id', (req, res) => {
   try {
     const data = readData();
     const index = data.testimonials.findIndex(
@@ -562,6 +652,7 @@ app.put('/api/testimonials/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating testimonial:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update testimonial.'
@@ -593,6 +684,7 @@ app.delete('/api/testimonials/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting testimonial:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete testimonial.'
@@ -600,9 +692,10 @@ app.delete('/api/testimonials/:id', (req, res) => {
   }
 });
 
-// Website banners
+// Banners
 app.get('/api/banners', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     banners: data.banners
@@ -612,6 +705,13 @@ app.get('/api/banners', (_req, res) => {
 app.post('/api/banners', (req, res) => {
   try {
     const body = getRequestData(req);
+
+    if (!body.title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Banner title is required.'
+      });
+    }
 
     const data = readData();
 
@@ -630,6 +730,7 @@ app.post('/api/banners', (req, res) => {
     });
   } catch (error) {
     console.error('Error creating banner:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create banner.'
@@ -637,7 +738,7 @@ app.post('/api/banners', (req, res) => {
   }
 });
 
-app.put('/api/banners/:id', (req, res) => {
+app.patch('/api/banners/:id', (req, res) => {
   try {
     const data = readData();
     const index = data.banners.findIndex(
@@ -666,6 +767,7 @@ app.put('/api/banners/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating banner:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update banner.'
@@ -697,6 +799,7 @@ app.delete('/api/banners/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting banner:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete banner.'
@@ -707,6 +810,7 @@ app.delete('/api/banners/:id', (req, res) => {
 // Portfolio categories
 app.get('/api/categories', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     categories: data.categories
@@ -741,6 +845,7 @@ app.post('/api/categories', (req, res) => {
     });
   } catch (error) {
     console.error('Error creating category:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create category.'
@@ -777,6 +882,7 @@ app.put('/api/categories/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating category:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update category.'
@@ -808,6 +914,7 @@ app.delete('/api/categories/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting category:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete category.'
@@ -818,6 +925,7 @@ app.delete('/api/categories/:id', (req, res) => {
 // Website settings
 app.get('/api/settings', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     settings: data.settings
@@ -842,6 +950,7 @@ app.put('/api/settings', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating settings:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update settings.'
@@ -852,6 +961,7 @@ app.put('/api/settings', (req, res) => {
 // Payment records
 app.get('/api/payments', (_req, res) => {
   const data = readData();
+
   res.json({
     success: true,
     payments: data.payments
@@ -879,6 +989,7 @@ app.post('/api/payments', (req, res) => {
     });
   } catch (error) {
     console.error('Error creating payment record:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create payment record.'
@@ -915,6 +1026,7 @@ app.patch('/api/payments/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error updating payment:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update payment.'
@@ -976,6 +1088,7 @@ app.post('/api/admin/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Admin login error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to log in.'
@@ -1050,6 +1163,7 @@ app.post('/api/admin/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Admin registration error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to create admin account.'
@@ -1068,7 +1182,12 @@ app.get('/api/data', (_req, res) => {
 });
 
 // Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((
+  err: any,
+  _req: express.Request,
+  res: express.Response,
+  _next: express.NextFunction
+) => {
   console.error('Unhandled server error:', err);
 
   res.status(500).json({
@@ -1095,7 +1214,9 @@ async function startServer(): Promise<void> {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Goodfolk Solution Full-Stack Server running on http://0.0.0.0:${PORT}`);
+    console.log(
+      `Goodfolk Solution Full-Stack Server running on http://0.0.0.0:${PORT}`
+    );
   });
 }
 
