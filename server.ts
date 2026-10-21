@@ -47,6 +47,12 @@ interface WebsiteData {
   categories: any[];
   settings: Record<string, any>;
   users: any[];
+    siteContent: Record<string, any>;
+  portfolioProjects: any[];
+  trustedBrands: any[];
+  serviceConcepts: any[];
+  customSections: any[];
+  mediaLibrary: any[];
 }
 
 const defaultData: WebsiteData = {
@@ -58,7 +64,13 @@ const defaultData: WebsiteData = {
   banners: [],
   categories: [],
   settings: {},
-  users: []
+  users: [],
+    siteContent: {},
+  portfolioProjects: [],
+  trustedBrands: [],
+  serviceConcepts: [],
+  customSections: [],
+  mediaLibrary: []
 };
 
 function readData(): WebsiteData {
@@ -921,7 +933,66 @@ app.delete('/api/categories/:id', (req, res) => {
     });
   }
 });
+// CMS site content
+app.get('/api/site-content', (_req, res) => {
+  const data = readData();
 
+  res.json({
+    success: true,
+    siteContent: data.siteContent,
+    portfolioProjects: data.portfolioProjects,
+    trustedBrands: data.trustedBrands,
+    testimonials: data.testimonials,
+    serviceConcepts: data.serviceConcepts,
+    customSections: data.customSections,
+    mediaLibrary: data.mediaLibrary
+  });
+});
+
+app.put('/api/site-content', (req, res) => {
+  try {
+    const data = readData();
+    const body = getRequestData(req);
+
+    if (body.siteContent && typeof body.siteContent === 'object') {
+      data.siteContent = { ...data.siteContent, ...body.siteContent };
+    }
+
+    const arrayKeys = [
+      'portfolioProjects',
+      'trustedBrands',
+      'testimonials',
+      'serviceConcepts',
+      'customSections',
+      'mediaLibrary'
+    ];
+
+    for (const key of arrayKeys) {
+      if (Array.isArray(body[key])) {
+        (data as any)[key] = body[key];
+      }
+    }
+
+    writeData(data);
+
+    return res.json({
+      success: true,
+      siteContent: data.siteContent,
+      portfolioProjects: data.portfolioProjects,
+      trustedBrands: data.trustedBrands,
+      testimonials: data.testimonials,
+      serviceConcepts: data.serviceConcepts,
+      customSections: data.customSections,
+      mediaLibrary: data.mediaLibrary
+    });
+  } catch (error) {
+    console.error('Error updating site content:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update site content.'
+    });
+  }
+});
 // Website settings
 app.get('/api/settings', (_req, res) => {
   const data = readData();
